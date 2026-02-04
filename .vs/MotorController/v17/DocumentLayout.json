@@ -1,0 +1,41 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\VR-Lab\\Desktop\\MotorController\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{779F2F09-EB61-462A-BC43-86135401C61F}|MotorController\\MotorController.vcxproj|C:\\Users\\VR-Lab\\Desktop\\MotorController\\MotorController\\MotorController.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{779F2F09-EB61-462A-BC43-86135401C61F}|MotorController\\MotorController.vcxproj|solutionrelative:MotorController\\MotorController.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MotorController.cpp",
+              "DocumentMoniker": "C:\\Users\\VR-Lab\\Desktop\\MotorController\\MotorController\\MotorController.cpp",
+              "RelativeDocumentMoniker": "MotorController\\MotorController.cpp",
+              "ToolTip": "C:\\Users\\VR-Lab\\Desktop\\MotorController\\MotorController\\MotorController.cpp",
+              "RelativeToolTip": "MotorController\\MotorController.cpp",
+              "ViewState": "AQIAAO0AAAAAAAAAAAAuwA4BAAABAAAA",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-12-03T12:57:12.225Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

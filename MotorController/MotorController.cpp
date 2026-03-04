@@ -9,14 +9,15 @@
 #include <cstdio>
 #include <cctype>
 #include <cstdlib>
+#include <atomic>
 
 #pragma comment(lib, "ws2_32.lib")
 
 HANDLE hSerial;
-volatile long currentEncoder = 0;
+std::atomic<long> currentEncoder{ 0 };
 bool monitorMode = true;  // Start with display ON
 bool debugMode = false;   // Show raw serial data
-bool running = true;
+volatile bool running = true;
 
 // UDP settings
 SOCKET udpSocket;
@@ -77,9 +78,9 @@ bool connectSerial(const char* portName) {
     SetCommState(hSerial, &dcbSerialParams);
 
     COMMTIMEOUTS timeouts = { 0 };
-    timeouts.ReadIntervalTimeout = 10;
-    timeouts.ReadTotalTimeoutConstant = 10;
-    timeouts.ReadTotalTimeoutMultiplier = 1;
+    timeouts.ReadIntervalTimeout = 1;
+    timeouts.ReadTotalTimeoutConstant = 1;
+    timeouts.ReadTotalTimeoutMultiplier = 0;
     SetCommTimeouts(hSerial, &timeouts);
 
     return true;
@@ -127,7 +128,7 @@ DWORD WINAPI serialReaderThread(LPVOID lpParam) {
                         }
 
                         if (isNumber && !lineBuffer.empty()) {
-                            currentEncoder = atol(lineBuffer.c_str());
+                            currentEncoder.store(atol(lineBuffer.c_str()));
                         }
                         lineBuffer.clear();
                     }
@@ -137,7 +138,6 @@ DWORD WINAPI serialReaderThread(LPVOID lpParam) {
                 }
             }
         }
-        Sleep(1);
     }
     return 0;
 }
@@ -177,18 +177,21 @@ int main() {
     }
 
     std::cout << "Connected to " << port << " at 115200 baud" << std::endl;
-    Sleep(2000);
+    Sleep(500);
 
     printHelp();
 
-    // Start reader thread
+    // Start reader thread with elevated priority
     readerThread = CreateThread(NULL, 0, serialReaderThread, NULL, 0, NULL);
+    SetThreadPriority(readerThread, THREAD_PRIORITY_ABOVE_NORMAL);
 
     std::cout << "\nPress D to toggle debug mode and see raw serial data" << std::endl;
     std::cout << "Press M to toggle encoder display\n" << std::endl;
 
     int tick = 0;
     const char spinner[] = "|/-\\";
+    long lastSentEncoder = 0;
+    DWORD lastDisplayTime = GetTickCount();
 
     while (running) {
         if (_kbhit()) {
@@ -231,13 +234,13 @@ int main() {
 
             if (key == 'z' || key == 'Z') {
                 sendChar('Z');
-                currentEncoder = 0;
+                currentEncoder.store(0);
                 std::cout << "\n[RESET]" << std::endl;
                 continue;
             }
 
             if (key == 'e' || key == 'E') {
-                std::cout << "\nEncoder: " << currentEncoder << std::endl;
+                std::cout << "\nEncoder: " << currentEncoder.load() << std::endl;
                 continue;
             }
 
@@ -250,17 +253,23 @@ int main() {
             if (key == 'v' || key == 'V') { sendChar('V'); }
         }
 
-        // Send to Unity
-        sendUDP(currentEncoder);
-
-        // Display
-        if (monitorMode && !debugMode) {
-            printf("\r[%c] Encoder: %-10ld", spinner[tick % 4], currentEncoder);
-            fflush(stdout);
+        // Send to Unity only when value changes
+        long enc = currentEncoder.load();
+        if (enc != lastSentEncoder) {
+            sendUDP(enc);
+            lastSentEncoder = enc;
         }
 
-        tick++;
-        Sleep(2);
+        // Throttle display to ~every 50ms to avoid console overhead
+        DWORD now = GetTickCount();
+        if (monitorMode && !debugMode && (now - lastDisplayTime >= 50)) {
+            printf("\r[%c] Encoder: %-10ld", spinner[tick % 4], enc);
+            fflush(stdout);
+            tick++;
+            lastDisplayTime = now;
+        }
+
+        Sleep(0);  // Yield timeslice without fixed delay
     }
 
     WaitForSingleObject(readerThread, 1000);
